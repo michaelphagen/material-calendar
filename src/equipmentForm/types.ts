@@ -5,6 +5,7 @@ import Tag from "../resources/Tag";
 export interface EquipmentState {
   filterDrawerIsOpen: boolean;
   categoryDrawerIsOpen: boolean;
+  equipmentCartIsOpen: boolean;
   categoryDrawerView: boolean;
   searchString: string;
   equipment: Equipment[];
@@ -12,6 +13,7 @@ export interface EquipmentState {
   categories: Category[];
   selectedTags: { [k: string]: boolean };
   currentCategory: Category | null;
+  viewedCategory: Category | null;
   previousCategory: Category[];
   setFieldValue: (field: string, value: number | string | boolean) => void;
 }
@@ -20,11 +22,13 @@ export enum EquipmentActionTypes {
   ChangedSearchString,
   ReceivedResource,
   SelectedCategory,
+  ViewedCategory,
   ReturnToPreviousCategory,
   ClearCategoryHistory,
   SelectedFilter,
   ToggleFilterDrawer,
   ToggleCategoryDrawer,
+  ToggleEquipmentCart,
   ToggleEquipmentViewMode,
 }
 

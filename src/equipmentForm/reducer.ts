@@ -5,7 +5,8 @@ import Tag from "../resources/Tag";
 
 export const initialState = {
   filterDrawerIsOpen: false,
-  categoryDrawerIsOpen: false,
+  categoryDrawerIsOpen: true,
+  equipmentCartIsOpen: false,
   categoryDrawerView: false,
   searchString: "",
   equipment: [] as Equipment[],
@@ -13,6 +14,7 @@ export const initialState = {
   categories: [] as Category[],
   selectedTags: {} as { [k: string]: boolean },
   currentCategory: null,
+  viewedCategory: null,
   previousCategory: [],
 };
 
@@ -41,8 +43,8 @@ const selectedFilter: StateHandler = (state, { payload }) => ({
 
 const addPrevious = (state: EquipmentState): Category[] => {
   const newState = state.previousCategory;
-  if (state.currentCategory) {
-    newState.push(state.currentCategory);
+  if (state.viewedCategory) {
+    newState.push(state.viewedCategory);
   }
   return newState;
 };
@@ -50,12 +52,18 @@ const addPrevious = (state: EquipmentState): Category[] => {
 const selectedCategory: StateHandler = (state, { payload }) => ({
   ...state,
   ...payload,
+});
+
+const viewedCategory: StateHandler = (state, { payload }) => ({
+  ...state,
+  ...payload,
   previousCategory: addPrevious(state),
 });
 
 const returnToPreviousCategory: StateHandler = (state) => ({
   ...state,
-  currentCategory: state.previousCategory.pop() || null,
+  currentCategory: null,
+  viewedCategory: state.previousCategory.pop() || null,
 });
 
 const clearCategoryHistory: StateHandler = (state) => ({
@@ -78,17 +86,23 @@ const toggleEquipmentViewMode: StateHandler = (state) => ({
   categoryDrawerView: !state.categoryDrawerView,
 });
 
+const toggleEquipmentCart: StateHandler = (state) => ({
+  ...state,
+  equipmentCartIsOpen: !state.equipmentCartIsOpen,
+});
 const reducer: StateHandler = (state, action) =>
   ({
     [EquipmentActionTypes.ChangedSearchString]: changedSearchString,
     [EquipmentActionTypes.ReceivedResource]: receivedResource,
     [EquipmentActionTypes.SelectedCategory]: selectedCategory,
+    [EquipmentActionTypes.ViewedCategory]: viewedCategory,
     [EquipmentActionTypes.ReturnToPreviousCategory]: returnToPreviousCategory,
     [EquipmentActionTypes.ClearCategoryHistory]: clearCategoryHistory,
     [EquipmentActionTypes.SelectedFilter]: selectedFilter,
     [EquipmentActionTypes.ToggleFilterDrawer]: toggleFilterDrawer,
     [EquipmentActionTypes.ToggleCategoryDrawer]: toggleCategoryDrawer,
     [EquipmentActionTypes.ToggleEquipmentViewMode]: toggleEquipmentViewMode,
+    [EquipmentActionTypes.ToggleEquipmentCart]: toggleEquipmentCart,
   }[action.type](state, action));
 
 export default reducer;

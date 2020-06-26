@@ -2,7 +2,6 @@ import React, { FunctionComponent, useEffect } from "react";
 import {
   List,
   AppBar,
-  Button,
   Toolbar,
   IconButton,
   Typography,
@@ -10,8 +9,9 @@ import {
 } from "@material-ui/core";
 import ArrowBackIosIcon from "@material-ui/icons/ArrowBackIos";
 import FilterDrawer from "./FilterDrawer";
-import CategoryDrawer from "./CategoryDrawer";
+import CategoryPage from "./CategoryPage";
 import TuneIcon from "@material-ui/icons/Tune";
+import ShoppingCartIcon from "@material-ui/icons/ShoppingCart";
 import EquipmentList from "./EquipmentList";
 import EquipmentStandardList from "./EquipmentStandardList";
 import {
@@ -26,8 +26,8 @@ import {
   EquipmentActionTypes,
 } from "../equipmentForm/types";
 import reducer, { initialState } from "../equipmentForm/reducer";
-import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import EquipmentViewToggleMenu from "./EquipmentViewToggleMenu";
+import EquipmentCart from "./EquipmentCart";
 
 const EquipmentForm: FunctionComponent<EquipmentFormProps> = ({
   open,
@@ -47,8 +47,8 @@ const EquipmentForm: FunctionComponent<EquipmentFormProps> = ({
   const toggleFilterDrawer = (): void =>
     dispatch({ type: EquipmentActionTypes.ToggleFilterDrawer, payload: {} });
 
-  const toggleCategoryDrawer = (): void =>
-    dispatch({ type: EquipmentActionTypes.ToggleCategoryDrawer, payload: {} });
+  const toggleEquipmentCart = (): void =>
+    dispatch({ type: EquipmentActionTypes.ToggleEquipmentCart, payload: {} });
   return (
     <Dialog fullScreen open={open} TransitionComponent={transition}>
       <div className={classes.root}>
@@ -59,6 +59,12 @@ const EquipmentForm: FunctionComponent<EquipmentFormProps> = ({
           onClose={toggleFilterDrawer}
           closeDrawer={toggleFilterDrawer}
         />
+        <EquipmentCart
+          state={state}
+          onOpen={toggleEquipmentCart}
+          onClose={toggleEquipmentCart}
+          selectedEquipment={selectedEquipment}
+        />
         <AppBar position="sticky">
           <List>
             <Toolbar>
@@ -67,20 +73,27 @@ const EquipmentForm: FunctionComponent<EquipmentFormProps> = ({
                 edge="start"
                 color="inherit"
                 aria-label="close"
-                onClick={(): void => setOpen(false)}
+                onClick={(): void => {
+                  state.categoryDrawerView &&
+                  (state.viewedCategory || state.currentCategory)
+                    ? state.categoryDrawerIsOpen
+                      ? dispatch({
+                          type: EquipmentActionTypes.ReturnToPreviousCategory,
+                          payload: {},
+                        })
+                      : dispatch({
+                          type: EquipmentActionTypes.ToggleCategoryDrawer,
+                          payload: {},
+                        })
+                    : setOpen(false);
+                }}
               >
                 <ArrowBackIosIcon />
               </IconButton>
               {state.categoryDrawerView ? (
-                <Button
-                  className={classes.title}
-                  endIcon={<ExpandMoreIcon />}
-                  onClick={toggleCategoryDrawer}
-                >
-                  <Typography component="h6">
-                    {state.currentCategory?.title || "All Categories"}
-                  </Typography>
-                </Button>
+                <Typography component="h6">
+                  {state.viewedCategory?.title || "All Categories"}
+                </Typography>
               ) : (
                 <Typography className={classes.title}>Equipment</Typography>
               )}
@@ -92,29 +105,34 @@ const EquipmentForm: FunctionComponent<EquipmentFormProps> = ({
               >
                 <TuneIcon />
               </IconButton>
+              <IconButton
+                edge="start"
+                color="inherit"
+                onClick={toggleEquipmentCart}
+                aria-label="filter"
+              >
+                <ShoppingCartIcon />
+              </IconButton>
               <EquipmentViewToggleMenu state={state} dispatch={dispatch} />
             </Toolbar>
           </List>
         </AppBar>
-        {state.categoryDrawerView && (
-          <CategoryDrawer
-            state={state}
-            dispatch={dispatch}
-            onOpen={toggleCategoryDrawer}
-            onClose={toggleCategoryDrawer}
-          />
+        {state.categoryDrawerView && state.categoryDrawerIsOpen && (
+          <CategoryPage state={state} dispatch={dispatch} />
         )}
         {state.categoryDrawerView ? (
-          <EquipmentStandardList
-            setFieldValue={state.setFieldValue}
-            equipmentList={filterItems(
-              quantizedEquipment,
-              state.searchString,
-              state.selectedTags,
-              state.currentCategory
-            )}
-            selectedEquipment={selectedEquipment}
-          />
+          !state.categoryDrawerIsOpen && (
+            <EquipmentStandardList
+              setFieldValue={state.setFieldValue}
+              equipmentList={filterItems(
+                quantizedEquipment,
+                state.searchString,
+                state.selectedTags,
+                state.currentCategory
+              )}
+              selectedEquipment={selectedEquipment}
+            />
+          )
         ) : (
           <EquipmentList
             dispatch={dispatch}
