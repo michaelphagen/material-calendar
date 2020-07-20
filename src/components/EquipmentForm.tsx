@@ -41,6 +41,40 @@ const EquipmentForm: FunctionComponent<EquipmentFormProps> = ({
   const classes = useStyles();
   const quantizedEquipment = quantizeEquipment(state.equipment);
 
+  const reserveEquipment = (id: number, quantity: number): void => {
+    let quantityToReserve = quantity;
+    const reservationArray: {
+      [k: string]: number;
+    } = {};
+    //wipe the exiting values
+    state.equipment
+      .filter((item) => item.modelId === id)
+      .forEach((item) =>
+        setFieldValue("equipmentReservation[" + item.id + "]", 0)
+      );
+    while (quantityToReserve > 0) {
+      const item = state.equipment
+        .filter((item) => !reservationArray[item.id])
+        .find((item) => item.modelId === id);
+      if (!item) {
+        return undefined;
+      }
+      if (item.quantity >= quantityToReserve) {
+        reservationArray[item.id] = quantityToReserve;
+        quantityToReserve = 0;
+      } else {
+        reservationArray[item.id] = item.quantity;
+        quantityToReserve = quantityToReserve - item.quantity;
+      }
+    }
+    Object.keys(reservationArray).forEach((item) =>
+      setFieldValue(
+        "equipmentReservation[" + item + "]",
+        reservationArray[item]
+      )
+    );
+  };
+
   useEffect(() => fetchAllEquipmentResources(dispatch), []);
 
   const toggleFilterDrawer = (): void =>
@@ -120,6 +154,7 @@ const EquipmentForm: FunctionComponent<EquipmentFormProps> = ({
         </AppBar>
         {(!state.categoryDrawerView || !state.selectedCategory) && (
           <EquipmentList
+            reserveEquipment={reserveEquipment}
             dispatch={dispatch}
             state={state}
             equipmentList={filterItems(
@@ -133,6 +168,7 @@ const EquipmentForm: FunctionComponent<EquipmentFormProps> = ({
         )}
         {state.categoryDrawerView && state.selectedCategory && (
           <EquipmentStandardList
+            reserveEquipment={reserveEquipment}
             setFieldValue={state.setFieldValue}
             equipmentList={filterItems(
               quantizedEquipment,

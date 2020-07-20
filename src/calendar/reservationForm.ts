@@ -90,6 +90,7 @@ export const makeInitialValues = (
     hasNotes: "no",
     hasEquipment: "no",
     equipment: {},
+    equipmentReservation: {},
   };
 };
 

@@ -5,6 +5,7 @@ import Equipment from "../resources/Equipment";
 
 interface EquipmentStandardListProps {
   equipmentList?: Equipment[];
+  reserveEquipment: (id: number, quantity: number) => void;
   selectedEquipment: {
     [k: string]: number;
   };
@@ -14,6 +15,7 @@ const EquipmentStandardList: FunctionComponent<EquipmentStandardListProps> = ({
   equipmentList,
   selectedEquipment,
   setFieldValue,
+  reserveEquipment,
 }) => {
   // Create list of single elements. may not work properly for singletons
   return (
@@ -36,6 +38,7 @@ const EquipmentStandardList: FunctionComponent<EquipmentStandardListProps> = ({
               ]
             }
             setFieldValue={setFieldValue}
+            reserveEquipment={reserveEquipment}
           />
         ))}
     </List>

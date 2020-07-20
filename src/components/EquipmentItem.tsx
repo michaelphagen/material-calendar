@@ -15,11 +15,13 @@ interface EquipmentItemProps {
   item: Equipment;
   quantity: number;
   setFieldValue: (field: string, value: number | string | boolean) => void;
+  reserveEquipment: (id: number, quantity: number) => void;
 }
 const EquipmentItem: FunctionComponent<EquipmentItemProps> = ({
   item,
   quantity = 0,
   setFieldValue,
+  reserveEquipment,
 }) => {
   const [errors, setErrors] = React.useState({} as { [k: string]: boolean });
   const itemName = getItemName(item);
@@ -30,6 +32,7 @@ const EquipmentItem: FunctionComponent<EquipmentItemProps> = ({
     }
     if (itemName in errors) setErrors({ ...errors, itemName: false });
     setFieldValue("equipment[" + itemName + "]", newValue);
+    reserveEquipment(item.modelId, newValue);
   };
 
   return (

@@ -4,6 +4,7 @@ import Tag from "./Tag";
 interface Equipment {
   [k: string]: unknown;
   id: number;
+  modelId: number;
   description: string; //! required
   category: Category; // hierchial; use sparingly
   tags: Tag[];
