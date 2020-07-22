@@ -1,5 +1,7 @@
 import Category from "./Category";
+import Event from "./Event";
 import Tag from "./Tag";
+import { unshiftTZ } from "../utils/date";
 
 interface Equipment {
   [k: string]: unknown;
@@ -16,10 +18,39 @@ interface Equipment {
   notes?: string; //! string or string[]?
   quantity: number; // default=1
   consumable: boolean; // default=false; for admins for periodic reordering
-  reservations: number[];
+  reservations: {
+    bookingId: number;
+    quantity: number;
+    start: string;
+    end: string;
+  }[];
 }
 
 class Equipment implements Equipment {
+  // returns the number of an item available during an event
+  static isAvailable(item: Equipment, event: Event): number {
+    if (item.reservations.length === 0) {
+      return item.quantity;
+    }
+    const reserved = item.reservations
+      .filter(
+        (reservation) =>
+          (unshiftTZ(new Date(reservation.start)) <= new Date(event.start) &&
+            unshiftTZ(new Date(reservation.end)) > new Date(event.start)) ||
+          (unshiftTZ(new Date(reservation.start)) < new Date(event.end) &&
+            unshiftTZ(new Date(reservation.start)) >= new Date(event.start))
+      )
+      .map((reservation) => reservation.quantity)
+      .reduce((a, b) => a + b, 0);
+    return item.quantity - reserved;
+  }
+  static availableItems(items: Equipment[], event: Event): Equipment[] {
+    return items
+      .map((item) => {
+        return { ...item, quantity: Equipment.isAvailable(item, event) };
+      })
+      .filter((item) => item.quantity > 0);
+  }
   static url = "/api/equipment";
   constructor(
     equip = {
@@ -29,7 +60,12 @@ class Equipment implements Equipment {
       tags: [] as Tag[],
       quantity: 1,
       consumable: false,
-      reservations: [] as number[],
+      reservations: [] as {
+        bookingId: number;
+        quantity: number;
+        start: string;
+        end: string;
+      }[],
     }
   ) {
     Object.assign(this, equip);

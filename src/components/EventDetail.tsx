@@ -102,31 +102,33 @@ const EventDetail: FunctionComponent<CalendarUIProps> = ({
                 </ListSubheader>
               }
             >
-              {equipmentList.map(([title, quantity]) => (
-                <ListItem key={title}>{title + ": " + quantity}</ListItem>
+              {equipmentList.map(([id, item]) => (
+                <ListItem key={id}>{item.name + ": " + item.quantity}</ListItem>
               ))}
             </List>
           )}
         </section>
-        {future && (userOwns || open) && (
-          <Button
-            key="MakeBooking"
-            style={{
-              backgroundColor: "Green",
-              color: "white",
-              maxWidth: "400px",
-            }}
-            onClick={(event): void => {
-              event.stopPropagation();
-              dispatch({
-                type: CalendarAction.OpenReservationForm,
-                payload: { currentEvent: state.currentEvent },
-              });
-            }}
-          >
-            {userOwns ? "Modify Reservation" : "Reserve this time"}
-          </Button>
-        )}
+        {
+          /* future && */ (userOwns || open) && (
+            <Button
+              key="MakeBooking"
+              style={{
+                backgroundColor: "Green",
+                color: "white",
+                maxWidth: "400px",
+              }}
+              onClick={(event): void => {
+                event.stopPropagation();
+                dispatch({
+                  type: CalendarAction.OpenReservationForm,
+                  payload: { currentEvent: state.currentEvent },
+                });
+              }}
+            >
+              {userOwns ? "Modify Reservation" : "Reserve this time"}
+            </Button>
+          )
+        }
         {userOwns && future && (
           <div>
             <Button

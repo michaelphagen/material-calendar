@@ -5,6 +5,7 @@ import { FormikValues } from "formik";
 import { CalendarState } from "./types";
 import Project from "../resources/Project";
 import UserGroup from "../resources/UserGroup";
+import Equipment from "../resources/Equipment";
 import Event from "../resources/Event";
 import { ResourceKey } from "../resources/types";
 
@@ -34,12 +35,70 @@ export const validationSchema = object().shape({
   }),
 });
 
+export function getCurrentEquipment(): Equipment[] | null {
+  const values: Equipment[] = [];
+  fetch(`/api/equipment`)
+    .then((response) => response.json())
+    .then((data) => {
+      data.data.map((item: Equipment) => values.push(new Equipment(item)));
+    });
+  return values;
+}
+
+export function getEquipmentIds(
+  requests: {
+    [k: number]: any;
+  },
+  event: Event
+): {
+  [k: number]: number;
+} {
+  const equipmentList: Equipment[] = [];
+  const newList: {
+    [k: string]: number;
+  } = {};
+  // To work properly, this needs to be modified to exclude any equipment
+  // that is unavailable at that requested reservation time. This should also
+  // be done in the UI
+  fetch(`/api/equipment`)
+    .then((response) => response.json())
+    .then((data) => {
+      data.data.map((item: Equipment) =>
+        equipmentList.push(new Equipment(item))
+      );
+    })
+    .then(() => {
+      const filteredList = Equipment.availableItems(equipmentList, event);
+      Object.keys(requests).forEach((key) => {
+        const id = Number(key);
+        let quantityToReserve = requests[id].quantity;
+        while (quantityToReserve > 0) {
+          const item = filteredList
+            .filter((item) => !newList[item.id])
+            .find((item) => item.modelId === id);
+          if (!item) {
+            // This is an error, no item found with given modelId
+            return null;
+          }
+          if (item.quantity >= quantityToReserve) {
+            newList[item.id] = quantityToReserve;
+            quantityToReserve = 0;
+          } else {
+            newList[item.id] = item.quantity;
+            quantityToReserve = quantityToReserve - item.quantity;
+          }
+        }
+      });
+    });
+  return newList;
+}
+
 export const updater = (values: {
   [k: string]: unknown;
 }): {
   [k: string]: unknown;
 } => {
-  return {
+  const newVal = {
     allotment_id: values.event,
     group_id: values.groupId,
     project_id: values.project,
@@ -48,14 +107,45 @@ export const updater = (values: {
     living_room: values.liveRoom === "yes" ? 1 : 0,
     contact_phone: values.phone,
     notes: values.hasNotes ? values.notes : null,
+    //gear: values.equipment,
   };
+  if (values.id) {
+    return { ...newVal, id: values.id };
+  } else {
+    return newVal;
+  }
+};
+
+export const makeEquipmentRequests = (
+  equipment: {
+    [k: string]: any;
+  },
+  bookingId: number
+): { id: string; bookingId: number; quantity: number }[] => {
+  return Object.entries(equipment).map(([key, value]) => {
+    return {
+      id: key,
+      bookingId: bookingId,
+      quantity: value as number,
+    };
+  });
 };
 
 export const submitHandler = (
   values: { [k: string]: unknown },
   actions: FormikValues
 ): void => {
+  values = {
+    ...values,
+    equipment: getEquipmentIds(
+      values.equipment as {
+        [k: number]: any;
+      },
+      values.event as Event
+    ),
+  };
   actions.setSubmitting(true);
+  console.log(updater(values));
   console.log(JSON.stringify(updater(values)));
   fetch(`/api/reservations${values.id ? `/${values.id}` : ""}`, {
     method: values.id ? "PUT" : "POST",
@@ -63,7 +153,21 @@ export const submitHandler = (
     body: JSON.stringify(updater(values)),
   })
     .then((response) => response.json())
-    .then(({ error, data, context }) => console.log({ error, data, context }))
+    .then(({ error, data, context }) => {
+      console.log({ error, data, context });
+      console.log(data);
+      fetch(`/api/reservations/equipment/${data.id || values.id}`, {
+        method: values.id ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(
+          makeEquipmentRequests(values.equipment as {}, data.id)
+        ),
+      })
+        .then((response) => response.json())
+        .then(({ error, data, context }) => {
+          console.log({ error, data, context });
+        });
+    })
     .catch(console.error)
     .finally(() => {
       actions.setSubmitting(false);
@@ -90,7 +194,6 @@ export const makeInitialValues = (
     hasNotes: "no",
     hasEquipment: "no",
     equipment: {},
-    equipmentReservation: {},
   };
 };
 
@@ -113,7 +216,7 @@ export const getValuesFromReservation = (
     hasGuests: event.reservation.guests ? "yes" : "no",
     hasNotes: event.reservation.notes ? "yes" : "no",
     notes: event.reservation.notes,
-    equipment: event.reservation.equipment,
+    equipment: event.reservation.equipment || {},
     hasEquipment: event.reservation.equipment ? "yes" : "no",
   };
 };

@@ -16,7 +16,7 @@ interface EquipmentListProps {
   reserveEquipment: (id: number, quantity: number) => void;
   equipmentList: Equipment[] | undefined;
   selectedEquipment: {
-    [k: string]: number;
+    [k: string]: any;
   };
 }
 const EquipmentList: FunctionComponent<EquipmentListProps> = ({

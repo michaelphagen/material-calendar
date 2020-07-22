@@ -10,9 +10,9 @@ interface EquipmentCartProps {
   onClose: () => void;
   onOpen: () => void;
   selectedEquipment: {
-    [k: string]: number;
+    [k: string]: any;
   };
-  setFieldValue: (field: string, value: number | string | boolean) => void;
+  setFieldValue: (field: string, value: any) => void;
 }
 const EquipmentCart: FunctionComponent<EquipmentCartProps> = ({
   state,
@@ -24,7 +24,7 @@ const EquipmentCart: FunctionComponent<EquipmentCartProps> = ({
   const selectedItems = Object.keys(selectedEquipment).filter(function (
     key: string
   ) {
-    return selectedEquipment[key] > 0;
+    return selectedEquipment[key].quantity > 0;
   });
 
   return (
@@ -44,9 +44,9 @@ const EquipmentCart: FunctionComponent<EquipmentCartProps> = ({
       />
       {selectedItems.length > 0 ? (
         <List>
-          {selectedItems.map((item) => {
+          {selectedItems.map((key) => {
             const selectOptions = Array.from({
-              length: selectedEquipment[item] + 1,
+              length: selectedEquipment[key].quantity + 1,
             }).map((_, i) => (
               <MenuItem key={i} value={i}>
                 {i}
@@ -54,7 +54,7 @@ const EquipmentCart: FunctionComponent<EquipmentCartProps> = ({
             ));
             return (
               <div
-                key={item}
+                key={selectedEquipment[key].name}
                 style={{
                   display: "flex",
                   justifyContent: "space-between",
@@ -63,14 +63,14 @@ const EquipmentCart: FunctionComponent<EquipmentCartProps> = ({
                 }}
               >
                 <ListItem>
-                  <ListItemText primary={item} />
+                  <ListItemText primary={selectedEquipment[key].name} />
                   <Select
-                    labelId={item + "Quantity Select"}
-                    name={"equipment[" + item + "]"}
-                    value={selectedEquipment[item]}
+                    labelId={selectedEquipment[key].name + "Quantity Select"}
+                    name={"equipment[" + key + "]"}
+                    value={selectedEquipment[key].quantity}
                     onChange={(event): void =>
                       setFieldValue(
-                        "equipment[" + item + "]",
+                        "equipment[" + selectedEquipment[key].name + "]",
                         event.target.value as number
                       )
                     }

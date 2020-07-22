@@ -27,19 +27,25 @@ import reducer, { initialState } from "../equipmentForm/reducer";
 import EquipmentViewToggleMenu from "./EquipmentViewToggleMenu";
 import EquipmentCart from "./EquipmentCart";
 import EquipmentStandardList from "./EquipmentStandardList";
+import Equipment from "../resources/Equipment";
 
 const EquipmentForm: FunctionComponent<EquipmentFormProps> = ({
   open,
   setOpen,
   selectedEquipment,
   setFieldValue,
+  event,
 }) => {
   const [state, dispatch] = React.useReducer(reducer, {
     ...initialState,
     setFieldValue,
   });
   const classes = useStyles();
-  const quantizedEquipment = quantizeEquipment(state.equipment);
+  const quantizedEquipment = quantizeEquipment(
+    Equipment.availableItems(state.equipment, event)
+  );
+  //const quantizedEquipment = quantizeEquipment(state.equipment);
+  //console.log(quantizedEquipment);
 
   const reserveEquipment = (id: number, quantity: number): void => {
     let quantityToReserve = quantity;

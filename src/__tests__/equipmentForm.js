@@ -6,6 +6,7 @@ import {
   makeQueryRegExp,
   makeQueryTest,
 } from "../equipmentForm/equipmentForm";
+import { getEquipmentIds } from "../calendar/reservationForm";
 
 //------ TEST FIXTURES ---------//
 //--- Categories
@@ -48,6 +49,13 @@ const mic = {
   category: microphonesCategory,
 };
 Object.freeze(mic);
+
+//--- Quantity Request
+const quantityRequest = {
+  "609": 4,
+  "610": 2,
+};
+Object.freeze(quantityRequest);
 
 //--------- TESTS ----------------//
 
@@ -124,4 +132,11 @@ test("filterItems by category", () => {
   expect(filterItems([guitar, mic], "", {}, instrumentsCategory)).toEqual([
     guitar,
   ]);
+});
+
+test("getEquipmentIds from model_IDs", () => {
+  expect(getEquipmentIds(quantityRequest)).toEqual({
+    "666": 4,
+    "610": 2,
+  });
 });
